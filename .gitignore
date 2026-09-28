@@ -1,16 +1,49 @@
-# --- Backend / Python Ignores ---
+# ==========================================
+# Python & FastAPI Backend
+# ==========================================
 backend/venv/
+backend/.venv/
 backend/__pycache__/
 backend/*.py[cod]
-backend/*.db
-backend/*.log
+backend/$PYTHONDONTWRITEBYTECODE
+backend/.env
+backend/.env.local
 
-# --- Frontend / Node Ignores ---
+# Database & Runtime Logs
+*.db
+*.sqlite3
+*.log
+
+# ==========================================
+# React / Node Frontend
+# ==========================================
 frontend/node_modules/
+frontend/build/
 frontend/dist/
-frontend/.vscode/
-frontend/.idea/
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
 
-# --- System Ignores ---
+# ==========================================
+# WAF & ModSecurity Archives / Temporary Files
+# ==========================================
+*.tar.gz
+*.tgz
+*.zip
+coreruleset-*/
+modsecurity-crs/rules/*.conf
+!waf-configs/
+
+# ==========================================
+# System & Editor Junk
+# ==========================================
 .DS_Store
+.idea/
+.vscode/
 *.swp
+*.swo

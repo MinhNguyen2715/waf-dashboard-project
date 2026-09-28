@@ -6,8 +6,10 @@
         <ShieldAlert class="w-9 h-9 text-sky-400" />
         <div>
           <h1 class="text-2xl font-bold tracking-wide">WAF SECURITY DASHBOARD</h1>
-          <p class="text-xs text-slate-400">Nginx + ModSecurity v3 Real-Time Monitoring</p>
-        </div>
+          <!--
+	  <p class="text-xs text-slate-400">Nginx + ModSecurity v3 Real-Time Monitoring</p>
+	  -->      
+	</div>
       </div>
       <div class="flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700">
         <span class="relative flex h-3 w-3">
@@ -22,7 +24,7 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <div class="bg-[#1e293b] p-5 rounded-xl border border-slate-700 shadow-lg">
         <div class="flex justify-between items-center">
-          <span class="text-slate-400 text-sm font-medium">Total Threats Blocked</span>
+          <span class="text-slate-400 text-lg font-medium">Total Threats Blocked</span>
           <ShieldX class="w-6 h-6 text-rose-500" />
         </div>
         <div class="text-3xl font-extrabold mt-2 text-rose-400">{{ stats.total_blocked || 0 }}</div>
@@ -30,7 +32,7 @@
 
       <div class="bg-[#1e293b] p-5 rounded-xl border border-slate-700 shadow-lg">
         <div class="flex justify-between items-center">
-          <span class="text-slate-400 text-sm font-medium">Top Attacker IP</span>
+          <span class="text-slate-400 text-lg font-medium">Top Attacker IP</span>
           <Activity class="w-6 h-6 text-amber-500" />
         </div>
         <div class="text-2xl font-bold mt-2 text-amber-400">
@@ -43,7 +45,7 @@
 
       <div class="bg-[#1e293b] p-5 rounded-xl border border-slate-700 shadow-lg">
         <div class="flex justify-between items-center">
-          <span class="text-slate-400 text-sm font-medium">SQLi & XSS Threats</span>
+          <span class="text-slate-400 text-lg font-medium">SQLi & XSS Threats</span>
           <AlertTriangle class="w-6 h-6 text-yellow-500" />
         </div>
         <div class="text-3xl font-extrabold mt-2 text-yellow-400">
@@ -53,7 +55,7 @@
 
       <div class="bg-[#1e293b] p-5 rounded-xl border border-slate-700 shadow-lg">
         <div class="flex justify-between items-center">
-          <span class="text-slate-400 text-sm font-medium">RCE & LFI Threats</span>
+          <span class="text-slate-400 text-lg font-medium">RCE & LFI Threats</span>
           <Terminal class="w-6 h-6 text-purple-500" />
         </div>
         <div class="text-3xl font-extrabold mt-2 text-purple-400">
@@ -66,7 +68,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
       <!-- Doughnut Chart -->
       <div class="bg-[#1e293b] p-6 rounded-xl border border-slate-700 shadow-lg">
-        <h2 class="text-lg font-semibold mb-4 text-slate-200">Attack Vectors Distribution</h2>
+        <h2 class="text-xl font-semibold mb-4 text-white">Attack Vectors Distribution</h2>
         <div class="h-64 flex justify-center items-center">
           <Doughnut v-if="chartData.labels.length" :data="chartData" :options="chartOptions" />
           <span v-else class="text-slate-500 text-sm">Awaiting attack logs...</span>
@@ -75,10 +77,10 @@
 
       <!-- Top Attacker IPs Table -->
       <div class="lg:col-span-2 bg-[#1e293b] p-6 rounded-xl border border-slate-700 shadow-lg">
-        <h2 class="text-lg font-semibold mb-4 text-slate-200">Top Attacking IP Addresses</h2>
+        <h2 class="text-xl font-semibold mb-4 text-white">Top Attacking IP Addresses</h2>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm text-slate-300">
-            <thead class="bg-slate-800 text-slate-400 uppercase text-xs">
+            <thead class="bg-slate-800 text-white uppercase text-base">
               <tr>
                 <th class="p-3">IP Address</th>
                 <th class="p-3">Attack Count</th>
@@ -105,14 +107,14 @@
     <!-- Recent Logs Table -->
     <div class="bg-[#1e293b] p-6 rounded-xl border border-slate-700 shadow-lg">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold text-slate-200">Real-Time Security Event Logs</h2>
-        <button @click="fetchData" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded border border-slate-700">
+        <h2 class="text-xl font-semibold mb-4 text-white">Real-Time Security Event Logs</h2>
+        <button @click="fetchData" class="text-base bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded border border-slate-700">
           Manual Refresh
         </button>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-slate-300">
-          <thead class="bg-slate-800 text-slate-400 uppercase text-xs">
+          <thead class="bg-slate-800 text-white uppercase text-base">
             <tr>
               <th class="p-3">ID</th>
               <th class="p-3">Timestamp</th>
@@ -124,8 +126,8 @@
           </thead>
           <tbody class="divide-y divide-slate-800">
             <tr v-for="log in recentLogs" :key="log.id" class="hover:bg-slate-800/50 transition-colors">
-              <td class="p-3 font-mono text-slate-500">#{{ log.id }}</td>
-              <td class="p-3 text-xs text-slate-400">{{ log.timestamp }}</td>
+              <td class="p-3 text-sm font-mono text-slate-500">#{{ log.id }}</td>
+              <td class="p-3 text-xm text-slate-400">{{ log.timestamp }}</td>
               <td class="p-3 font-mono text-sky-400">{{ log.client_ip }}</td>
               <td class="p-3">
                 <span :class="getBadgeClass(log.attack_type)" class="px-2.5 py-1 rounded-full text-xs font-semibold">
@@ -169,7 +171,7 @@ const chartData = ref({
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
-  plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } }
+  plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' , font: { size: 13} } } }
 }
 
 const fetchData = async () => {
