@@ -23,6 +23,16 @@ app.add_middleware(
 app.include_router(stats.router)
 app.include_router(logs.router)
 
-# Start Background Log Tailer Thread
-parser_thread = threading.Thread(target=follow_log_file, daemon=True)
-parser_thread.start()
+# Hàm bọc để bắt lỗi nếu log tailer bị crash
+def run_tailer_with_debug():
+    print("[+] Log Tailer Thread starting now...", flush=True)
+    try:
+        follow_log_file()
+    except Exception as e:
+        print(f"[CRITICAL ERROR in Log Tailer]: {e}", flush=True)
+
+@app.on_event("startup")
+def startup_event():
+    parser_thread = threading.Thread(target=run_tailer_with_debug, daemon=True)
+    parser_thread.start()
+    print("[+] Registered Startup Event: Log Tailer Thread Launched!", flush=True)
