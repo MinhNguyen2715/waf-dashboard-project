@@ -14,9 +14,9 @@
             <th class="px-4 py-3 whitespace-nowrap">Timestamp</th>
             <th class="px-4 py-3 whitespace-nowrap">Client IP</th>
             <th class="px-4 py-3 whitespace-nowrap">Main Attack Type</th>
-            <th class="px-4 py-3 whitespace-nowrap">Rule ID</th>
-            <th class="px-4 py-3">Request URI</th>
-            <th class="px-4 py-3 text-center whitespace-nowrap">Score</th>
+	    <th class="px-4 py-3 text-center whitespace-nowrap">Score</th>
+            <th class="px-4 py-3 whitespace-nowrap w-32">Rule ID</th>
+            <th class="px-4 py-3 w-48">Request URI</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-700/40">
@@ -38,23 +38,22 @@
               </span>
             </td>
 
-            <!-- 4. Rule ID -->
-            <td class="px-4 py-3 whitespace-nowrap font-mono text-slate-300 text-xs font-semibold">
-              {{ log.rule_id || log.rule || 'N/A' }}
-            </td>
-
-            <!-- 5. Request URI -->
-            <td class="px-4 py-3 font-mono text-xs text-slate-400 max-w-[180px] truncate" :title="log.request_uri">
-              {{ log.request_uri }}
-            </td>
-
-            <!-- 6. Score (Updated with Dynamic Anomaly Score Coloring) -->
-            <td class="px-4 py-3 text-center whitespace-nowrap">
-              <span 
-                class="px-2.5 py-0.5 rounded text-xs font-bold border transition-colors" 
+		<td class="px-4 py-3 text-center whitespace-nowrap">
+              <span
+                class="px-2.5 py-0.5 rounded text-xs font-bold border transition-colors"
                 :class="getScoreClass(log.anomaly_score)">
                 {{ log.anomaly_score }}
               </span>
+            </td>
+
+            <!-- 5. Rule ID (Fix độ rộng max-w-[130px]) -->
+            <td class="px-4 py-3 font-mono text-slate-300 text-xs font-semibold max-w-[130px] truncate" :title="log.rule_id || log.rule">
+              {{ log.rule_id || log.rule || 'N/A' }}
+            </td>
+
+            <!-- 6. Request URI (Fix độ rộng max-w-[200px]) -->
+            <td class="px-4 py-3 font-mono text-xs text-slate-400 max-w-[200px] truncate" :title="log.request_uri">
+              {{ log.request_uri }}
             </td>
           </tr>
 
@@ -77,11 +76,51 @@ defineProps({
 
 const getBadgeClass = (type) => {
   if (!type) return 'bg-slate-800 text-slate-400 border-slate-700'
-  if (type.includes('SQL')) return 'bg-red-950/80 text-red-400 border-red-800/80'
-  if (type.includes('XSS')) return 'bg-amber-950/80 text-amber-400 border-amber-800/80'
-  if (type.includes('Command') || type.includes('RCE') || type.includes('Execution')) return 'bg-purple-950/80 text-purple-400 border-purple-800/80'
-  if (type.includes('Path') || type.includes('LFI')) return 'bg-blue-950/80 text-blue-400 border-blue-800/80'
-  return 'bg-slate-800 text-slate-400 border-slate-700'
+  
+  const t = type.toLowerCase()
+
+  // 1. Tấn công gộp (Combined / Mixed) -> Tím Fuchsia nổi bật
+  if (t.includes('combined') || t.includes('mixed')) {
+    return 'bg-fuchsia-950/80 text-fuchsia-300 border-fuchsia-700/80 shadow-[0_0_8px_rgba(217,70,239,0.2)]'
+  }
+  
+  // 2. SQL Injection -> Đỏ thẫm
+  if (t.includes('sql')) {
+    return 'bg-red-950/80 text-red-400 border-red-800/80'
+  }
+  
+  // 3. Cross-Site Scripting (XSS) -> Vàng Cam (Amber)
+  if (t.includes('xss') || t.includes('scripting')) {
+    return 'bg-amber-950/80 text-amber-400 border-amber-800/80'
+  }
+  
+  // 4. Remote Code Execution (RCE) / Command Injection -> Tím Đậm (Purple)
+  if (t.includes('rce') || t.includes('command') || t.includes('execution')) {
+    return 'bg-purple-950/80 text-purple-400 border-purple-800/80'
+  }
+  
+  // 5. Path Traversal / LFI / RFI -> Xanh Dương (Blue)
+  if (t.includes('path') || t.includes('traversal') || t.includes('lfi') || t.includes('rfi')) {
+    return 'bg-blue-950/80 text-blue-400 border-blue-800/80'
+  }
+  
+  // 6. PHP Injection -> Tím Chàm (Indigo)
+  if (t.includes('php')) {
+    return 'bg-indigo-950/80 text-indigo-300 border-indigo-700/80'
+  }
+  
+  // 7. Security Scanner / Dò quét -> Xanh Lá (Emerald)
+  if (t.includes('scanner') || t.includes('detected')) {
+    return 'bg-emerald-950/80 text-emerald-400 border-emerald-800/80'
+  }
+  
+  // 8. Protocol Violation -> Cam Đậm (Orange)
+  if (t.includes('protocol') || t.includes('violation')) {
+    return 'bg-orange-950/80 text-orange-400 border-orange-800/80'
+  }
+
+  // Fallback mặc định
+  return 'bg-slate-800 text-slate-300 border-slate-700'
 }
 
 const getScoreClass = (score) => {

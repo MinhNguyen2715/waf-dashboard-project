@@ -55,7 +55,17 @@
                   {{ log.attack_type }}
                 </span>
               </td>
-              <td class="px-4 py-3 font-mono text-slate-300 text-xs font-semibold whitespace-nowrap">{{ log.rule_id || 'N/A' }}</td>
+              <td class="px-4 py-3 font-mono text-xs whitespace-nowrap">
+  <div class="flex flex-wrap gap-1">
+    <span 
+v-for="rule in Array.from(new Set(log.matched_rules || [log.rule_id]))"
+      :key="rule"
+      class="px-1.5 py-0.5 bg-slate-900 text-slate-300 rounded border border-slate-700 font-semibold"
+    >
+      #{{ rule }}
+    </span>
+  </div>
+</td>
               <td class="px-4 py-3 font-mono text-xs text-slate-400 max-w-md truncate" :title="log.request_uri">
                 {{ log.request_uri }}
               </td>
@@ -105,16 +115,34 @@
               <span class="text-slate-400 block uppercase font-medium">Client IP Address</span>
               <span class="text-amber-400 font-mono font-semibold">{{ selectedLog.client_ip }}</span>
             </div>
-            <div>
-              <span class="text-slate-400 block uppercase font-medium">Main Attack Type</span>
-              <span :class="getBadgeClass(selectedLog.attack_type)" class="px-2 py-0.5 rounded text-xs font-semibold border inline-block mt-1">
-                {{ selectedLog.attack_type }}
+
+	  <div class="col-span-2">
+            <span class="text-slate-400 block uppercase font-medium mb-1">Detected Attack Categories</span>
+            <div class="flex flex-wrap gap-1.5">
+              <span
+                v-for="cat in (selectedLog.all_attack_types || [selectedLog.attack_type])"
+                :key="cat"
+                :class="getBadgeClass(cat)"
+                class="px-2.5 py-1 rounded text-xs font-semibold border inline-block"
+              >
+                {{ cat }}
               </span>
             </div>
-            <div>
-              <span class="text-slate-400 block uppercase font-medium">Rule ID</span>
-              <span class="text-slate-200 font-mono font-bold">{{ selectedLog.rule_id || 'N/A' }}</span>
-            </div>
+          </div>
+
+          <div class="col-span-2">
+            <span class="text-slate-400 block uppercase font-medium mb-1">Triggered Rules List</span>
+            <div class="flex flex-wrap gap-1.5">
+              <span
+		v-for="rule in Array.from(new Set(selectedLog.matched_rules || [selectedLog.rule_id]))"
+                :key="rule"
+                class="px-2 py-0.5 bg-amber-950/40 text-amber-300 border border-amber-700/60 font-mono font-bold rounded text-xs"
+              >
+
+      Rule #{{ rule }}
+    </span>
+  </div>
+</div>
             <div>
               <span class="text-slate-400 block uppercase font-medium">Anomaly Score</span>
               <span :class="getScoreClass(selectedLog.anomaly_score)" class="px-2.5 py-0.5 rounded text-xs font-bold border inline-block mt-1">
@@ -185,11 +213,51 @@ const closeModal = () => {
 
 const getBadgeClass = (type) => {
   if (!type) return 'bg-slate-800 text-slate-400 border-slate-700'
-  if (type.includes('SQL')) return 'bg-red-950/80 text-red-400 border-red-800/80'
-  if (type.includes('XSS')) return 'bg-amber-950/80 text-amber-400 border-amber-800/80'
-  if (type.includes('Command') || type.includes('RCE') || type.includes('Execution')) return 'bg-purple-950/80 text-purple-400 border-purple-800/80'
-  if (type.includes('Path') || type.includes('LFI')) return 'bg-blue-950/80 text-blue-400 border-blue-800/80'
-  return 'bg-slate-800 text-slate-400 border-slate-700'
+  
+  const t = type.toLowerCase()
+
+  // 1. Tấn công gộp (Combined / Mixed) -> Tím Fuchsia / Neon nổi bật
+  if (t.includes('combined') || t.includes('mixed')) {
+    return 'bg-fuchsia-950/80 text-fuchsia-300 border-fuchsia-700/80 shadow-[0_0_8px_rgba(217,70,239,0.2)]'
+  }
+  
+  // 2. SQL Injection -> Đỏ thẫm
+  if (t.includes('sql')) {
+    return 'bg-red-950/80 text-red-400 border-red-800/80'
+  }
+  
+  // 3. Cross-Site Scripting (XSS) -> Vàng Cam (Amber)
+  if (t.includes('xss') || t.includes('scripting')) {
+    return 'bg-amber-950/80 text-amber-400 border-amber-800/80'
+  }
+  
+  // 4. Remote Code Execution (RCE) / Command Injection -> Tím Đậm (Purple)
+  if (t.includes('rce') || t.includes('command') || t.includes('execution')) {
+    return 'bg-purple-950/80 text-purple-400 border-purple-800/80'
+  }
+  
+  // 5. Path Traversal / LFI / RFI -> Xanh Dương (Blue)
+  if (t.includes('path') || t.includes('traversal') || t.includes('lfi') || t.includes('rfi')) {
+    return 'bg-blue-950/80 text-blue-400 border-blue-800/80'
+  }
+  
+  // 6. PHP Injection -> Tím Chàm (Indigo)
+  if (t.includes('php')) {
+    return 'bg-indigo-950/80 text-indigo-300 border-indigo-700/80'
+  }
+  
+  // 7. Security Scanner / Dò quét -> Xanh Lá (Emerald/Teal)
+  if (t.includes('scanner') || t.includes('detected')) {
+    return 'bg-emerald-950/80 text-emerald-400 border-emerald-800/80'
+  }
+  
+  // 8. Protocol Violation -> Cam Đậm (Orange)
+  if (t.includes('protocol') || t.includes('violation')) {
+    return 'bg-orange-950/80 text-orange-400 border-orange-800/80'
+  }
+
+  // Fallback mặc định cho các loại khác
+  return 'bg-slate-800 text-slate-300 border-slate-700'
 }
 
 const getScoreClass = (score) => {

@@ -1,9 +1,12 @@
-from fastapi import APIRouter
+import os
 import sqlite3
+from fastapi import APIRouter
 
 router = APIRouter(prefix="/api/stats", tags=["Stats"])
 
-DB_PATH = "waf_logs.db"
+# Xác định đường dẫn tuyệt đối tới file waf_logs.db trong thư mục backend
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, "waf_logs.db")
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
@@ -16,14 +19,14 @@ def get_overview_stats():
     cursor = conn.cursor()
 
     # 1. Total Threats Blocked
-    cursor.execute("SELECT COUNT(*) FROM attack_logs")
+    cursor.execute("SELECT COUNT(*) FROM waf_audit_logs")
     total_blocked = cursor.fetchone()[0] or 0
 
     # 2. Top Attacker IP
     cursor.execute("""
-        SELECT client_ip, COUNT(*) as count 
-        FROM attack_logs 
-        GROUP BY client_ip 
+        SELECT client_ip, COUNT(*) as count
+        FROM waf_audit_logs
+        GROUP BY client_ip
         ORDER BY count DESC LIMIT 1
     """)
     top_ip_row = cursor.fetchone()
@@ -32,22 +35,22 @@ def get_overview_stats():
 
     # 3. Most Frequent Attack Type
     cursor.execute("""
-        SELECT attack_type, COUNT(*) as count 
-        FROM attack_logs 
-        GROUP BY attack_type 
+        SELECT attack_type, COUNT(*) as count
+        FROM waf_audit_logs
+        GROUP BY attack_type
         ORDER BY count DESC LIMIT 1
     """)
     top_type_row = cursor.fetchone()
     most_frequent_attack = top_type_row["attack_type"] if top_type_row else "None"
 
-    # 4. High Threat Level Count (Score >= 5 hoặc 8)
-    cursor.execute("SELECT COUNT(*) FROM attack_logs WHERE anomaly_score >= 8")
+    # 4. High Threat Level Count (Anomaly Score >= 8)
+    cursor.execute("SELECT COUNT(*) FROM waf_audit_logs WHERE anomaly_score >= 8")
     high_threat_count = cursor.fetchone()[0] or 0
 
     # 5. Attack Distribution (Cho biểu đồ Donut Chart)
     cursor.execute("""
-        SELECT attack_type, COUNT(*) as count 
-        FROM attack_logs 
+        SELECT attack_type, COUNT(*) as count
+        FROM waf_audit_logs
         GROUP BY attack_type
     """)
     distribution_rows = cursor.fetchall()
