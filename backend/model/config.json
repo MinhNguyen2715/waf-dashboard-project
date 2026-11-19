@@ -1,0 +1,48 @@
+{
+  "add_cross_attention": false,
+  "architectures": [
+    "BertForSequenceClassification"
+  ],
+  "attention_probs_dropout_prob": 0.1,
+  "bos_token_id": null,
+  "classifier_dropout": null,
+  "dtype": "float32",
+  "eos_token_id": null,
+  "gradient_checkpointing": false,
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.1,
+  "hidden_size": 768,
+  "id2label": {
+    "0": "000 - Normal",
+    "1": "126 - Path Traversal",
+    "2": "153 - Input Data Manipulation",
+    "3": "194 - Fake the Source of Data",
+    "4": "242 - Code Injection",
+    "5": "310 - Scanning for Vulnerable Software",
+    "6": "34 - HTTP Response Splitting"
+  },
+  "initializer_range": 0.02,
+  "intermediate_size": 3072,
+  "is_decoder": false,
+  "label2id": {
+    "000 - Normal": 0,
+    "126 - Path Traversal": 1,
+    "153 - Input Data Manipulation": 2,
+    "194 - Fake the Source of Data": 3,
+    "242 - Code Injection": 4,
+    "310 - Scanning for Vulnerable Software": 5,
+    "34 - HTTP Response Splitting": 6
+  },
+  "layer_norm_eps": 1e-12,
+  "max_position_embeddings": 514,
+  "model_type": "bert",
+  "num_attention_heads": 12,
+  "num_hidden_layers": 6,
+  "pad_token_id": 0,
+  "problem_type": "single_label_classification",
+  "tie_word_embeddings": true,
+  "transformers_version": "5.16.1",
+  "type_vocab_size": 1,
+  "use_cache": false,
+  "vocab_size": 52000
+}

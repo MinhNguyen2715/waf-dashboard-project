@@ -47,3 +47,13 @@ modsecurity-crs/rules/*.conf
 .vscode/
 *.swp
 *.swo
+# Python cache & backups
+__pycache__/
+*.py[cod]
+*.save
+*.bak
+
+# Databases & Logs
+*.db
+*.sqlite3
+*.log

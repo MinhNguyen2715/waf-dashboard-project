@@ -23,7 +23,7 @@
           <tr v-for="log in logs" :key="log.id" class="hover:bg-slate-700/30 transition-colors">
             <!-- 1. Timestamp -->
             <td class="px-4 py-3 whitespace-nowrap text-xs text-slate-400 font-mono">
-              {{ log.timestamp }}
+              {{ formatTimestamp(log.timestamp) }}
             </td>
 
             <!-- 2. Client IP -->
@@ -32,24 +32,37 @@
             </td>
 
             <!-- 3. Main Attack Type -->
-            <td class="px-4 py-3 whitespace-nowrap">
-              <span :class="getBadgeClass(log.attack_type)" class="px-2.5 py-1 rounded-md text-xs font-semibold border inline-block whitespace-nowrap">
-                {{ log.attack_type }}
-              </span>
-            </td>
-
-		<td class="px-4 py-3 text-center whitespace-nowrap">
-              <span
+<td class="px-4 py-3 whitespace-nowrap">
+  <span 
+    :style="getBadgeStyle(getMainAttackType(log))" 
+    class="px-2.5 py-1 rounded-md text-xs font-semibold border inline-block whitespace-nowrap"
+  >
+    {{ getMainAttackType(log) }}
+  </span>
+</td>
+		
+		<td class="px-4 py-3 text-center whitespace-nowrap">             
+		<span
                 class="px-2.5 py-0.5 rounded text-xs font-bold border transition-colors"
                 :class="getScoreClass(log.anomaly_score)">
                 {{ log.anomaly_score }}
               </span>
             </td>
 
-            <!-- 5. Rule ID (Fix độ rộng max-w-[130px]) -->
-            <td class="px-4 py-3 font-mono text-slate-300 text-xs font-semibold max-w-[130px] truncate" :title="log.rule_id || log.rule">
-              {{ log.rule_id || log.rule || 'N/A' }}
-            </td>
+<td class="px-4 py-3 font-mono text-xs max-w-[240px]">
+  <div class="flex flex-wrap gap-1.5 items-center">
+    <span 
+      v-for="(tag, idx) in getRuleTags(log)" 
+      :key="idx"
+      :class="tag === 'SecBERT' 
+        ? 'text-purple-300 bg-purple-950/90 border-purple-700/80 shadow-[0_0_8px_rgba(168,85,247,0.3)]' 
+        : 'text-slate-200 bg-slate-900/90 border-slate-700/80'"
+      class="px-2 py-0.5 rounded border text-[11px] font-semibold font-mono inline-block whitespace-nowrap"
+    >
+      #{{ tag }}
+    </span>
+  </div>
+</td>
 
             <!-- 6. Request URI (Fix độ rộng max-w-[200px]) -->
             <td class="px-4 py-3 font-mono text-xs text-slate-400 max-w-[200px] truncate" :title="log.request_uri">
@@ -74,74 +87,83 @@ defineProps({
   }
 })
 
-const getBadgeClass = (type) => {
-  if (!type) return 'bg-slate-800 text-slate-400 border-slate-700'
-  
-  const t = type.toLowerCase()
-
-  // 1. Tấn công gộp (Combined / Mixed) -> Tím Fuchsia nổi bật
-  if (t.includes('combined') || t.includes('mixed')) {
-    return 'bg-fuchsia-950/80 text-fuchsia-300 border-fuchsia-700/80 shadow-[0_0_8px_rgba(217,70,239,0.2)]'
-  }
-  
-  // 2. SQL Injection -> Đỏ thẫm
-  if (t.includes('sql')) {
-    return 'bg-red-950/80 text-red-400 border-red-800/80'
-  }
-  
-  // 3. Cross-Site Scripting (XSS) -> Vàng Cam (Amber)
-  if (t.includes('xss') || t.includes('scripting')) {
-    return 'bg-amber-950/80 text-amber-400 border-amber-800/80'
-  }
-  
-  // 4. Remote Code Execution (RCE) / Command Injection -> Tím Đậm (Purple)
-  if (t.includes('rce') || t.includes('command') || t.includes('execution')) {
-    return 'bg-purple-950/80 text-purple-400 border-purple-800/80'
-  }
-  
-  // 5. Path Traversal / LFI / RFI -> Xanh Dương (Blue)
-  if (t.includes('path') || t.includes('traversal') || t.includes('lfi') || t.includes('rfi')) {
-    return 'bg-blue-950/80 text-blue-400 border-blue-800/80'
-  }
-  
-  // 6. PHP Injection -> Tím Chàm (Indigo)
-  if (t.includes('php')) {
-    return 'bg-indigo-950/80 text-indigo-300 border-indigo-700/80'
-  }
-  
-  // 7. Security Scanner / Dò quét -> Xanh Lá (Emerald)
-  if (t.includes('scanner') || t.includes('detected')) {
-    return 'bg-emerald-950/80 text-emerald-400 border-emerald-800/80'
-  }
-  
-  // 8. Protocol Violation -> Cam Đậm (Orange)
-  if (t.includes('protocol') || t.includes('violation')) {
-    return 'bg-orange-950/80 text-orange-400 border-orange-800/80'
-  }
-
-  // Fallback mặc định
-  return 'bg-slate-800 text-slate-300 border-slate-700'
+const formatTimestamp = (ts) => {
+  if (!ts) return 'N/A'
+  return ts.replace(/^[A-Za-z]{3}\s+/, '')
 }
 
+const getMainAttackType = (log) => {
+  if (!log) return 'Normal'
+
+  const blocker = (log.blocked_by || log.blockedBy || '').toLowerCase()
+  let rawType = ''
+
+  if (blocker.includes('secbert') || blocker.includes('ai')) {
+    rawType = log.ai_attack_type || log.aiAttackType || log.attack_type || 'Normal'
+  } else {
+    rawType = log.attack_type || 'Normal'
+  }
+
+  return rawType.replace(/^\d+\s*-\s*/, '').trim()
+}
+
+const getRuleTags = (log) => {
+  if (!log) return ['N/A']
+
+  const blocker = (log.blocked_by || log.blockedBy || '').toLowerCase()
+  const aiType = (log.ai_attack_type || log.aiAttackType || '').toLowerCase()
+
+  if (
+    blocker.includes('secbert') || 
+    blocker.includes('ai') || 
+    (aiType && !aiType.includes('normal') && !aiType.includes('skipped') && !log.matched_rules?.length)
+  ) {
+    return ['SecBERT']
+  }
+
+  let rulesRaw = log.rule_id || log.rule || log.matched_rules || log.matchedRules
+
+  if (Array.isArray(rulesRaw)) {
+    return rulesRaw.length > 0 ? rulesRaw : ['N/A']
+  }
+
+  if (typeof rulesRaw === 'string' && rulesRaw.trim() !== '') {
+    const list = rulesRaw.split(',').map(r => r.trim()).filter(r => r && r !== 'N/A')
+    return list.length > 0 ? list : ['N/A']
+  }
+
+  return ['N/A']
+}
+
+const getBadgeStyle = (type) => {
+  if (!type || type.toLowerCase().includes('normal')) {
+    return {
+      backgroundColor: 'rgba(30, 41, 59, 0.8)',
+      borderColor: 'rgba(51, 65, 85, 0.8)',
+      color: '#94a3b8'
+    }
+  }
+
+  let hash = 0
+  for (let i = 0; i < type.length; i++) {
+    hash = type.charCodeAt(i) + ((hash << 5) - hash)
+  }
+
+  const hue = Math.floor(Math.abs(hash * 137.5)) % 360
+
+  return {
+    backgroundColor: `hsla(${hue}, 85%, 15%, 0.85)`, 
+    borderColor: `hsla(${hue}, 85%, 45%, 0.8)`,    
+    color: `hsl(${hue}, 90%, 75%)`                  
+  }
+}
+
+// 5. Score Threat Level
 const getScoreClass = (score) => {
-  const val = Number(score) || 0;
-  
-  // Critical Threat (Combined Attacks / High Violation, e.g. Score 70)
-  if (val >= 20) {
-    return 'bg-rose-500/20 text-rose-400 border-rose-500/50 shadow-[0_0_8px_rgba(244,63,94,0.4)]';
-  }
-  
-  // High Threat (Score 10 - 19)
-  if (val >= 10) {
-    return 'bg-orange-500/20 text-orange-400 border-orange-500/50';
-  }
-  
-  // Medium Threat (Standard Blocking Threshold: Score 5 - 9)
-  if (val >= 5) {
-    return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50';
-  }
-  
-  // Low Threat (Score < 5)
-  return 'bg-slate-700 text-slate-300 border-slate-600';
+  const val = Number(score) || 0
+  if (val >= 20) return 'bg-rose-500/20 text-rose-400 border-rose-500/50 shadow-[0_0_8px_rgba(244,63,94,0.4)]'
+  if (val >= 10) return 'bg-orange-500/20 text-orange-400 border-orange-500/50'
+  if (val >= 5)  return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
+  return 'bg-slate-700 text-slate-300 border-slate-600'
 }
 </script>

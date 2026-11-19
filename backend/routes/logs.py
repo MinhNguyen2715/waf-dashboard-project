@@ -1,10 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from database import fetch_recent_logs
 
 router = APIRouter(prefix="/api/logs", tags=["Logs"])
 
 @router.get("/recent")
-def get_recent_logs(limit: int = 50):
+def get_recent_logs(limit: int = Query(default=10, ge=1, le=500)):
     logs = fetch_recent_logs(limit=limit)
 
     formatted_logs = []
@@ -14,9 +14,11 @@ def get_recent_logs(limit: int = 50):
         matched_rules_str = item.get("matched_rules") or ""
         rule_list = [r.strip() for r in matched_rules_str.split(",") if r.strip()] if matched_rules_str else []
 
-        # Bóc tách danh sách tất cả các Attack Types phục vụ Modal
         all_types_raw = item.get("all_attack_types") or item.get("attack_type") or ""
         all_types_list = [t.strip() for t in all_types_raw.split(",") if t.strip()]
+
+        blocked_by = item.get("blocked_by") or "None"
+        ai_attack_type = item.get("ai_attack_type") or "Normal"
 
         formatted_logs.append({
             "id": item.get("id"),
@@ -30,19 +32,22 @@ def get_recent_logs(limit: int = 50):
             "request_uri": uri_val,
             "payload": uri_val if not raw_msg else f"{uri_val} | {raw_msg}",
 
-            # Cột cho Bảng chính (Main Type: "SQL Injection", "PHP Injection" hoặc "Combined / Mixed Attack")
-            "attack_type": item.get("attack_type"),
+            "attack_type": item.get("attack_type") or "Normal",
             "main_rule_id": rule_list[0] if rule_list else "N/A",
 
-            # Dành riêng cho Popup Modal (Chứa mảng tất cả các loại tấn công)
+            "ai_attack_type": ai_attack_type,
+            "blocked_by": blocked_by,
+            "final_action": item.get("final_action") or "ALLOW",
+            "latency_ms": item.get("latency_ms") or 0.0,
+
             "all_attack_types": all_types_list,
 
-            # Cột cho Detailed Logs & Modal (Full List Rules)
             "rule_id": matched_rules_str if matched_rules_str else "N/A",
             "matched_rules": rule_list,
 
-            "anomaly_score": item.get("anomaly_score"),
+            "anomaly_score": item.get("anomaly_score") or 0,
             "status_code": item.get("status_code"),
             "created_at": item.get("created_at")
         })
+
     return formatted_logs
